@@ -1,33 +1,29 @@
-name: build
-
+name: Build and Release
 on:
   push:
-    branches: [ main, f-ci-action ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
-    name: build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest]
-
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: subosito/flutter-action@v1
+      - name: Checkout code
+        uses: actions/checkout@v2
         with:
-          flutter-version: '1.22.6'
-      - run: dart --version
-      - run: flutter --version
-      - name: build fair_example
-        working-directory: fair/example
-        run: |
-          flutter build apk --target-platform android-arm64
-          flutter build ios --release --no-codesign
-      - name: build sample project my_app
-        working-directory: samples/my_app
-        run: |
-          flutter build apk --target-platform android-arm64
-          flutter build ios --release --no-codesign
+          repository: jerghy/Fair
+          ref: main
+          path: fair_online/fair_online
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.3.0'
+      - name: Get dependencies
+        run: flutter pub get
+      - name: Build web
+        run: flutter build web
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: web-app
+          path: build/web
